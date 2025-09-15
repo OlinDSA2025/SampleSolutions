@@ -1,6 +1,12 @@
 package edu.olindsa
 import edu.olindsa.MutableStringList
 
+/**
+ * This is an implementation of [MutableStringList] that uses
+ * an array as an underlying data store.  Accessing elements in the
+ * list is the list is Theta(1) and the cost for adding N elements is
+ * Theta(N).
+ */
 class MyMutableStringList: MutableStringList {
     /**
      * Store the current number of entries in the list.  This
