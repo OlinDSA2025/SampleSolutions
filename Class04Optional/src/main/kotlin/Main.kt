@@ -2,7 +2,16 @@ package edu.olindsa
 import edu.olindsa.MutableStringList
 
 class MyMutableStringList: MutableStringList {
+    /**
+     * Store the current number of entries in the list.  This
+     * differs from the capacity of the list
+     */
     var count: Int = 0
+
+    /**
+     * [backingArray] is the underlying data structure that stores
+     * the elements in the mutable list.
+     */
     var backingArray = Array(1) { "" }
     override fun add(data: String) {
         val index = count
@@ -13,6 +22,10 @@ class MyMutableStringList: MutableStringList {
         count++
     }
 
+    /**
+     * Double the size of the array by creating a new backing array.
+     * Copy the old elements over to the new backing array.
+     */
     private fun expandArray() {
         val newBackingArray = Array(backingArray.count()*2) { "" }
         for ((idx, elem) in backingArray.withIndex()) {
