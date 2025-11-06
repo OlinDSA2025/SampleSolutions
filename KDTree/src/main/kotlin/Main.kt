@@ -4,7 +4,7 @@ import kotlin.time.measureTime
 import kotlin.time.Duration
 
 /**
- * Benchmark `KDTree` against brute force nearest neighbor.
+ * Benchmark [KDTree] against brute force nearest neighbor.
  * 1000 test points will be generated to test against the training
  * points.
  *

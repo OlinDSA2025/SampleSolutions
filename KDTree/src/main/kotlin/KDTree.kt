@@ -1,16 +1,40 @@
 package org.example
-
 import kotlin.math.pow
+
+/**
+ * This class implements a KDTree for nearest neighbor search.
+ *
+ * @param T the type of data to associate with each point
+ * @property d the dimensionality of each point
+ * @property root is the root node of the KDTree
+ * @property points is the data that has been entered into the KDTree
+ * @property values are the values that correspond to the data in [points].
+ * @constructor Creates an empty KDTree with the specified dimensionality
+ */
 class KDTree<T>(val d: Int) {
-    private var root: KDTreeNode<T>? = null
+    private var root: KDTreeNode? = null
     private var points: Array<DoubleArray>? = null
     private var values: Array<T>? = null
-    private class KDTreeNode<T>(val d: Int,
-                                val splitDim: Int?,
-                                val splitValue: Double?,
-                                val indices: List<Int>,
-                                var left: KDTreeNode<T>?,
-                                var right: KDTreeNode<T>?) {
+
+    /**
+     * Represents a node in our tree
+     * @property d the dimensionality of the points
+     * @property splitDim the dimension to split the points on (null if this is a leaf)
+     * @property indices the indices, corresponding to the original points,
+     *      that are stored at this node
+     * @property left the node corresponding to the left child (or null if this is a leaf)
+     * @property right the node corresponding to the right child (or null if this is a leaf)
+     */
+    private class KDTreeNode(val d: Int,
+                             val splitDim: Int?,
+                             val splitValue: Double?,
+                             val indices: List<Int>,
+                             var left: KDTreeNode?,
+                             var right: KDTreeNode?) {
+        /**
+         * Converts the node into a [String].  The [level] variable
+         * is used to properly indent the text.
+         */
         fun toStringHelper(level: Int): String {
             val indent = " ".repeat(level*2)
             var stringRepresentation = "${indent}d={$d} splitDim={$splitDim} splitValue={$splitValue} indices={$indices}\n"
@@ -27,12 +51,15 @@ class KDTree<T>(val d: Int) {
             return stringRepresentation
         }
     }
-    fun buildTree(points: Array<DoubleArray>,
-                  values: Array<T>) {
-        require(points.count() == values.count(), {
-            "mismatch in size of values" +
-                    " and points"
-        })
+
+    /**
+     * Populate the [KDTree] with the specified points and values.
+     * @param points the points to be added to the tree
+     * @param values the values that correspond to each point
+     */
+    fun buildTree(points: Array<DoubleArray>, values: Array<T>) {
+        require(points.count() == values.count(),
+                { "mismatch in size of values and points" })
         this.points = points
         this.values = values
 
@@ -40,6 +67,7 @@ class KDTree<T>(val d: Int) {
                                splitDim=0)
     }
 
+    /** Convert the tree to a [String] with indentation used to show the hierarhcy */
     override fun toString(): String {
         var stringRepresentation = ""
         stringRepresentation += root?.toStringHelper(0) ?: ""
@@ -47,11 +75,15 @@ class KDTree<T>(val d: Int) {
         return stringRepresentation
     }
 
+    /**
+     * Create a tree node from the specified indices and by splitting along
+     * the median of [splitDim]
+     */
     private fun buildTreeHelper(indices: List<Int>,
-                                splitDim: Int): KDTreeNode<T>? {
+                                splitDim: Int): KDTreeNode? {
         val points = points?: return null
         if (indices.count() <= 1) {
-            return KDTreeNode<T>(
+            return KDTreeNode(
                 d=d,
                 null,
                 null,
@@ -71,7 +103,7 @@ class KDTree<T>(val d: Int) {
         // if we don't default back to a base case.
 
         if (smallerThanMedianIndices.count() == 0 || largerThanMedianIndices.count() == 0) {
-            return KDTreeNode<T>(
+            return KDTreeNode(
                 d=d,
                 null,
                 null,
@@ -83,7 +115,7 @@ class KDTree<T>(val d: Int) {
         val left = buildTreeHelper(smallerThanMedianIndices, (splitDim + 1) % d)
         val right = buildTreeHelper(largerThanMedianIndices, (splitDim + 1) % d)
 
-        return KDTreeNode<T>(
+        return KDTreeNode(
             d = d,
             splitDim = splitDim,
             splitValue = median,
@@ -93,6 +125,10 @@ class KDTree<T>(val d: Int) {
         )
     }
 
+    /**
+     * Return the value corresponding to the closets point to [point]
+     * @param point the query point
+     */
     fun query(point: DoubleArray):T? {
         require(point.count() == d, { "point has the wrong dimensions" })
         val values = values ?: return null
@@ -101,7 +137,13 @@ class KDTree<T>(val d: Int) {
         return values[closestInd]
     }
 
-    private fun closestPointIndex(point: DoubleArray, node: KDTreeNode<T>):
+    /**
+     * Finds the index of the closest point to [point] in the subtree rooted
+     * at [node]
+     * @param point the query point
+     * @param node the subtree to search
+     */
+    private fun closestPointIndex(point: DoubleArray, node: KDTreeNode):
             Int? {
         val points = points ?: return null
         if (node.splitDim == null || node.splitValue == null) {
@@ -130,6 +172,12 @@ class KDTree<T>(val d: Int) {
         }
     }
 
+    /**
+     * Gets the median of a subset of points along dimensions [dim]
+     * Note: this could use quick select for faster performance
+     * @param indices the subset of points to use for median computation
+     * @param dim the dimension to calculate the median on
+     */
     internal fun getMedian(indices: List<Int>, dim: Int): Double? {
         val points = points ?: return null
         val splittingData = indices.map( { points[it][dim] })
@@ -139,6 +187,7 @@ class KDTree<T>(val d: Int) {
     }
 }
 
+/** Return the squared distance from [this] to [other] */
 fun DoubleArray.squaredDistanceTo(other: DoubleArray): Double {
     return this.zip(other).fold(0.0) { acc, next -> acc + (next.first - next.second).pow(2.0) }
 }
