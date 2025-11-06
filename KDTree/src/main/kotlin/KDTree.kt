@@ -11,21 +11,21 @@ import kotlin.math.pow
  * @property values are the values that correspond to the data in [points].
  * @constructor Creates an empty KDTree with the specified dimensionality
  */
-class KDTree<T>(val d: Int) {
+class KDTree<T>(val k: Int) {
     private var root: KDTreeNode? = null
     private var points: Array<DoubleArray>? = null
     private var values: Array<T>? = null
 
     /**
      * Represents a node in our tree
-     * @property d the dimensionality of the points
+     * @property k the dimensionality of the points
      * @property splitDim the dimension to split the points on (null if this is a leaf)
      * @property indices the indices, corresponding to the original points,
      *      that are stored at this node
      * @property left the node corresponding to the left child (or null if this is a leaf)
      * @property right the node corresponding to the right child (or null if this is a leaf)
      */
-    private class KDTreeNode(val d: Int,
+    private class KDTreeNode(val k: Int,
                              val splitDim: Int?,
                              val splitValue: Double?,
                              val indices: List<Int>,
@@ -37,7 +37,7 @@ class KDTree<T>(val d: Int) {
          */
         fun toStringHelper(level: Int): String {
             val indent = " ".repeat(level*2)
-            var stringRepresentation = "${indent}d={$d} splitDim={$splitDim} splitValue={$splitValue} indices={$indices}\n"
+            var stringRepresentation = "${indent}k={$k} splitDim={$splitDim} splitValue={$splitValue} indices={$indices}\n"
             if (left == null) {
                 stringRepresentation += "${indent}left: null\n"
             } else {
@@ -84,7 +84,7 @@ class KDTree<T>(val d: Int) {
         val points = points?: return null
         if (indices.count() <= 1) {
             return KDTreeNode(
-                d=d,
+                k=k,
                 null,
                 null,
                 indices = indices,
@@ -104,7 +104,7 @@ class KDTree<T>(val d: Int) {
 
         if (smallerThanMedianIndices.count() == 0 || largerThanMedianIndices.count() == 0) {
             return KDTreeNode(
-                d=d,
+                k=k,
                 null,
                 null,
                 indices = indices,
@@ -112,11 +112,11 @@ class KDTree<T>(val d: Int) {
                 right = null,
             )
         }
-        val left = buildTreeHelper(smallerThanMedianIndices, (splitDim + 1) % d)
-        val right = buildTreeHelper(largerThanMedianIndices, (splitDim + 1) % d)
+        val left = buildTreeHelper(smallerThanMedianIndices, (splitDim + 1) % k)
+        val right = buildTreeHelper(largerThanMedianIndices, (splitDim + 1) % k)
 
         return KDTreeNode(
-            d = d,
+            k = k,
             splitDim = splitDim,
             splitValue = median,
             indices = indices,
@@ -130,7 +130,7 @@ class KDTree<T>(val d: Int) {
      * @param point the query point
      */
     fun query(point: DoubleArray):T? {
-        require(point.count() == d, { "point has the wrong dimensions" })
+        require(point.count() == k, { "point has the wrong dimensions" })
         val values = values ?: return null
         val root = root ?: return null
         val closestInd = closestPointIndex(point, root) ?: return null
